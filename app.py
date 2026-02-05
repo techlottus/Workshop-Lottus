@@ -28,12 +28,42 @@ def obtener_alumnos():
 
 @app.route('/api/alumnos', methods=['POST'])
 def crear_alumno():
+    if not request.is_json:
+        return jsonify({'error': 'El cuerpo debe ser JSON'}), 400
+
     alumnos = leer_alumnos()
+    print(alumnos)
     nuevo_alumno = request.json
-    nuevo_alumno['id'] = len(alumnos) + 1
-    alumnos.append(nuevo_alumno)
-    guardar_alumnos(alumnos)
+
+    nombre = nuevo_alumno.get('nombre', '').strip()
+    email = nuevo_alumno.get('email', '').strip()
+    edad = nuevo_alumno.get('edad')
+
+    if not nombre:
+        print("Nombre vacío")
+        return jsonify({'error': 'El nombre no puede estar vacío'}), 400
+
+    if not email:
+        return jsonify({'error': 'El email no puede estar vacío'}), 400
+
+    if edad is None or edad < 0:
+        return jsonify({'error': 'La edad no puede ser negativa'}), 400
+
+    if any(a['email'] == email for a in alumnos):
+        return jsonify({'error': 'Email ya registrado'}), 409
+
+    nuevo_alumno['id'] = max([a['id'] for a in alumnos], default=0) + 1
+    nuevo_alumno['nombre'] = nombre
+    nuevo_alumno['email'] = email
+
+    try:
+        alumnos.append(nuevo_alumno)
+        guardar_alumnos(alumnos)
+    except Exception:
+        return jsonify({'error': 'Error al guardar el alumno'}), 500
+
     return jsonify(nuevo_alumno), 201
+
 
 @app.route('/api/alumnos/<int:id>', methods=['PUT'])
 def actualizar_alumno(id):
