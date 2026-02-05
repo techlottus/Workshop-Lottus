@@ -40,7 +40,6 @@ def crear_alumno():
     edad = nuevo_alumno.get('edad')
 
     if not nombre:
-        print("Nombre vacío")
         return jsonify({'error': 'El nombre no puede estar vacío'}), 400
 
     if not email:
